@@ -5,6 +5,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 var cookieParser = require("cookie-parser");
 
+// creating our Secret from .env
+const { SECRET } = process.env;
+
 //custom middleware
 const auth = require("./middleware/auth");
 //import model - User
@@ -52,7 +55,7 @@ app.post("/register", async (req, res) => {
         id: user._id,
         email,
       },
-      "shhhhh",
+      SECRET,
       { expiresIn: "2h" }
     );
 
@@ -78,10 +81,12 @@ app.post("/login", async (req, res) => {
 
     //check user in database
     const user = await User.findOne({ email });
-    //if user does not exists - assignment
+    //if user does not exists
     //match the password
-    if (user && (await bcrypt.compare(password, user.password))) {
-      const token = jwt.sign({ id: user._id, email }, "shhhhh", {
+    if (!(user && (await bcrypt.compare(password, user.password)))) {
+      res.status(401).send("User Does not exists!");
+    } else {
+      const token = jwt.sign({ id: user._id, email }, SECRET, {
         expiresIn: "2h",
       });
 
